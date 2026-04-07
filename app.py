@@ -497,9 +497,7 @@ def api_update_profile():
 
 
 # ── DB Init & Run ──────────────────────────────────────────────────
-@app.before_first_request
-def create_database():
-    """Create database tables before the first request is processed."""
+with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
