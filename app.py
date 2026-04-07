@@ -38,8 +38,19 @@ app = Flask(__name__)
 # Random key each restart → invalidates old sessions → everyone logs in fresh
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
-# SQLite with thread-safety + connection health checks for multi-user
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///diet_impact.db'
+# SQLite with thread-safety + connection health checks for multi-user.
+# Use /tmp on Vercel serverless; otherwise use local file in the repo root.
+sqlite_file = os.environ.get('SQLITE_FILE')
+if not sqlite_file:
+    if os.environ.get('VERCEL'):
+        sqlite_file = '/tmp/diet_impact.db'
+    else:
+        sqlite_file = os.path.join(os.getcwd(), 'diet_impact.db')
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'DATABASE_URL',
+    f'sqlite:///{sqlite_file}'
+)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSON_SORT_KEYS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
@@ -486,9 +497,16 @@ def api_update_profile():
 
 
 # ── DB Init & Run ──────────────────────────────────────────────────
-with app.app_context():
+@app.before_first_request
+def create_database():
+    """Create database tables before the first request is processed."""
     db.create_all()
 
 if __name__ == '__main__':
     # threaded=True handles multiple simultaneous users on the dev server
-    app.run(debug=True, port=5000, threaded=True)
+    app.run(
+        host='0.0.0.0',
+        port=int(os.environ.get('PORT', 5000)),
+        debug=os.environ.get('FLASK_DEBUG', 'false').lower() == 'true',
+        threaded=True,
+    )
