@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log Your Diet – Diet Impact Analyser</title>
+  <meta name="description" content="Log your daily food intake and get a personalised nutritional analysis." />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body data-tdee="{{ user.tdee or 2000 }}">
+
+<!-- ── Navbar ──────────────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container">
+    <a class="navbar-brand" href="/"><span class="brand-icon">🥗</span>Diet<span class="brand-accent">Impact</span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item"><a class="nav-link active" href="/"><i class="bi bi-house me-1"></i>Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-graph-up me-1"></i>Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+        <li class="nav-item"><a class="nav-link" href="/profile"><i class="bi bi-person-circle me-1"></i>Profile</a></li>
+        <li class="nav-item">
+          <div class="nav-user-badge">
+            <div class="avatar-xs">{{ user.username[0].upper() }}</div>
+            <span>{{ user.username }}</span>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a href="/logout" class="btn-nav-logout"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ───────────────────────────────────────────── -->
+<section class="hero-section" style="padding:50px 0 30px">
+  <div class="container text-center">
+    <div class="hero-badge"><i class="bi bi-stars me-1"></i>Personalised Nutrition Tracker</div>
+    <h1 class="hero-title">Welcome back, <span class="text-accent">{{ user.username }}</span> 👋</h1>
+    <p class="hero-subtitle">Log your meals, track your macros, and understand your diet's impact — one day at a time.</p>
+  </div>
+</section>
+
+<!-- ── Personalised Goal Banner ───────────────────────── -->
+<section style="padding:0 0 30px">
+  <div class="container">
+    <div class="greeting-banner">
+      <div class="greeting-text">
+        {% if user.tdee %}
+        <h4>🎯 Your Daily Calorie Goal: <span style="color:var(--green)">{{ user.tdee }} kcal</span></h4>
+        <p>Based on your height ({{ user.height_cm }}cm), weight ({{ user.weight_kg }}kg), age ({{ user.age }}yrs). 
+           BMI: <strong style="color:var(--cyan)">{{ user.bmi }} – {{ user.bmi_category }}</strong>.</p>
+        {% else %}
+        <h4>👤 Complete your profile to set a calorie goal</h4>
+        <p>Add your height, weight, age and gender to get a personalised daily target.</p>
+        {% endif %}
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        {% if user.tdee %}
+        <div class="tdee-chip">{{ user.tdee }} kcal/day</div>
+        {% endif %}
+        <a href="/profile" class="btn-outline-custom" style="padding:8px 20px;font-size:0.85rem;">
+          <i class="bi bi-pencil me-1"></i>Edit Profile
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── How It Works ───────────────────────────────────── -->
+<section class="steps-section" style="padding:10px 0 30px">
+  <div class="container">
+    <div class="row g-4 text-center">
+      <div class="col-md-4">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <div class="step-icon">📅</div>
+          <h5>Pick a Date</h5>
+          <p>Select the date you ate — today or any past day — to log your meals accurately.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <div class="step-icon">🍽️</div>
+          <h5>Add Your Meals</h5>
+          <p>Search and add all food items you consumed with exact quantities in grams.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <div class="step-icon">📊</div>
+          <h5>Save & Analyse</h5>
+          <p>Instantly save your log and view detailed charts. History builds your dashboard.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Food Entry Form ────────────────────────────────── -->
+<section class="form-section" id="food-entry">
+  <div class="container">
+    <div class="section-header text-center">
+      <h2>Log Your Food Intake</h2>
+      <p>Search any food, set quantities, and save your daily log to the database</p>
+    </div>
+
+    <div class="food-entry-card">
+
+      <!-- Date Picker Row -->
+      <div class="date-row">
+        <i class="bi bi-calendar3 text-accent" style="font-size:1.1rem;flex-shrink:0;"></i>
+        <label for="logDate">Logging for date:</label>
+        <input type="date" id="logDate" class="form-control" value="{{ today }}"
+               style="max-width:200px;" />
+        <span id="existingLogBadge" class="existing-log-badge d-none">
+          <i class="bi bi-check-circle me-1"></i>Log exists — will merge
+        </span>
+      </div>
+
+      <!-- Food Search Row -->
+      <div class="row g-3 align-items-end">
+        <div class="col-md-6">
+          <label class="form-label fw-600"><i class="bi bi-search me-1"></i>Search Food Item</label>
+          <div class="search-wrapper">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" id="foodSearch" class="form-control search-input"
+                   placeholder="e.g. Rice, Egg, Apple, Chicken..." autocomplete="off" />
+            <div id="searchDropdown" class="search-dropdown"></div>
+          </div>
+          <input type="hidden" id="selectedFoodId" />
+          <input type="hidden" id="selectedFoodName" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-600">Quantity (grams)</label>
+          <input type="number" id="quantityInput" class="form-control"
+                 placeholder="e.g. 150" min="1" max="2000" />
+        </div>
+        <div class="col-md-3">
+          <button id="addFoodBtn" class="btn-primary-custom w-100" style="padding:11px;">
+            <i class="bi bi-plus-circle me-2"></i>Add Food
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Nutrition Bar -->
+      <div class="live-nutrition-bar mt-4 d-none" id="liveBar">
+        <div class="lnb-label"><i class="bi bi-lightning-charge me-1"></i>Running Totals</div>
+        <div class="lnb-items">
+          <div class="lnb-item">
+            <div class="lnb-val" id="lbCal">0</div>
+            <div class="lnb-name">kcal</div>
+            <div class="lnb-bar"><div class="lnb-bar-fill" id="lbCalBar" style="width:0%"></div></div>
+          </div>
+          <div class="lnb-item">
+            <div class="lnb-val" id="lbProt">0g</div>
+            <div class="lnb-name">Protein</div>
+            <div class="lnb-bar"><div class="lnb-bar-fill" id="lbProtBar" style="width:0%"></div></div>
+          </div>
+          <div class="lnb-item">
+            <div class="lnb-val" id="lbCarb">0g</div>
+            <div class="lnb-name">Carbs</div>
+            <div class="lnb-bar"><div class="lnb-bar-fill" id="lbCarbBar" style="width:0%"></div></div>
+          </div>
+          <div class="lnb-item">
+            <div class="lnb-val" id="lbFat">0g</div>
+            <div class="lnb-name">Fat</div>
+            <div class="lnb-bar"><div class="lnb-bar-fill" id="lbFatBar" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Food Log Table -->
+      <div id="foodLogWrapper" class="mt-4 d-none">
+        <h6 class="log-title"><i class="bi bi-list-check me-2"></i>Today's Food Log</h6>
+        <div class="table-responsive">
+          <table class="table food-log-table" id="foodLogTable">
+            <thead>
+              <tr>
+                <th>#</th><th>Food Item</th><th>Category</th>
+                <th>Quantity</th><th>Calories</th><th>Protein</th>
+                <th>Carbs</th><th>Fat</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="foodLogBody"></tbody>
+            <tfoot id="foodLogFoot"></tfoot>
+          </table>
+        </div>
+
+        <div class="d-flex gap-3 mt-3 flex-wrap">
+          <button id="analyseBtn" class="btn-success-custom">
+            <i class="bi bi-floppy-disk me-2"></i>Save & Analyse
+          </button>
+          <button id="clearBtn" class="btn-outline-custom">
+            <i class="bi bi-trash me-2"></i>Clear All
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="empty-state">
+        <div class="empty-icon">🍴</div>
+        <p>No food added yet. Search and add your first item above.</p>
+      </div>
+    </div>
+
+    <!-- Loading & Error -->
+    <div id="loadingSection" class="text-center d-none mt-4">
+      <div class="spinner-custom"></div>
+      <p class="mt-2" style="color:var(--text-3)">Saving and analysing your diet...</p>
+    </div>
+    <div id="errorAlert" class="d-none mt-4" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:var(--r);padding:14px 18px;color:#fca5a5;font-size:0.88rem;"></div>
+  </div>
+</section>
+
+<!-- ── RDI Reference ───────────────────────────────────── -->
+<section class="rdi-section">
+  <div class="container">
+    <div class="section-header text-center">
+      <h2>Recommended Daily Intake (RDI)</h2>
+      <p>Reference values for a healthy adult on a 2000 kcal diet</p>
+    </div>
+    <div class="row g-3" id="rdiCards"></div>
+  </div>
+</section>
+
+<!-- ── Footer ──────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container text-center">
+    <p>Diet Impact Analyser &nbsp;|&nbsp; Personalised Nutrition Tracking</p>
+    <p class="footer-sub">Built with Flask · SQLite · Pandas · NumPy · Chart.js</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Read TDEE from data attribute — avoids Jinja inside JS (linter-friendly)
+  window.USER_TDEE = parseInt(document.body.dataset.tdee, 10) || 2000;
+</script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

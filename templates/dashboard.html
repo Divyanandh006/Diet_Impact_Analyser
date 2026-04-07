@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Nutrition Dashboard – Diet Impact Analyser</title>
+  <meta name="description" content="View your personalised nutrition history, trends, and insights over time." />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body data-tdee="{{ user.tdee or '' }}">
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container">
+    <a class="navbar-brand" href="/"><span class="brand-icon">🥗</span>Diet<span class="brand-accent">Impact</span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house me-1"></i>Home</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/dashboard"><i class="bi bi-graph-up me-1"></i>Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="/profile"><i class="bi bi-person-circle me-1"></i>Profile</a></li>
+        <li class="nav-item">
+          <div class="nav-user-badge">
+            <div class="avatar-xs">{{ user.username[0].upper() }}</div>
+            <span>{{ user.username }}</span>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a href="/logout" class="btn-nav-logout"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Page Header -->
+<section style="padding:50px 0 30px;text-align:center;">
+  <div class="container">
+    <div class="hero-badge"><i class="bi bi-graph-up me-1"></i>Data Science Dashboard</div>
+    <h1 class="hero-title"><span class="text-accent">{{ user.username }}'s</span> Nutrition History</h1>
+    <p class="hero-subtitle">Trends, patterns, and insights from your logged diet data</p>
+  </div>
+</section>
+
+<!-- Empty State (shown if no logs) -->
+<div class="container" id="emptyDashboard" style="display:none">
+  <div class="empty-dashboard">
+    <div class="empty-icon">📊</div>
+    <h3>No Data Yet</h3>
+    <p>Start logging your meals and come back here to see your nutrition trends!</p>
+    <a href="/" class="btn-primary-custom mt-3" style="display:inline-block;padding:12px 28px;">
+      <i class="bi bi-plus-circle me-2"></i>Log Your First Day
+    </a>
+  </div>
+</div>
+
+<!-- Dashboard Content (shown when data exists) -->
+<div class="dashboard-page" id="dashboardContent" style="display:none">
+  <div class="container">
+
+    <!-- Date Filter Bar -->
+    <div class="date-filter-bar">
+      <span style="color:var(--text-3);font-size:0.82rem;font-weight:600;align-self:center;">SHOW:</span>
+      <button class="filter-pill" data-days="7"  onclick="setFilter(7)">Last 7 Days</button>
+      <button class="filter-pill active" data-days="30" onclick="setFilter(30)">Last 30 Days</button>
+      <button class="filter-pill" data-days="90" onclick="setFilter(90)">Last 90 Days</button>
+      <button class="filter-pill" data-days="0"  onclick="setFilter(0)">All Time</button>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="dash-stat-grid" id="statCards">
+      <!-- Rendered by JS -->
+    </div>
+
+    <!-- Chart Row 1: Calorie Trend + Macro Area -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-7">
+        <div class="chart-card">
+          <h6 class="chart-title"><i class="bi bi-graph-up me-2 text-green"></i>Calorie Trend Over Time</h6>
+          <canvas id="calorieTrendChart" height="220"></canvas>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="chart-card">
+          <h6 class="chart-title"><i class="bi bi-pie-chart me-2 text-violet"></i>All-Time Macro Distribution</h6>
+          <canvas id="macroDoughnutChart" height="220"></canvas>
+          <div id="macroDoughnutLegend" class="macro-legend mt-3 justify-content-center"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Row 2: Macro Area + Health Score -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-8">
+        <div class="chart-card">
+          <h6 class="chart-title"><i class="bi bi-layers me-2 text-cyan"></i>Macro Split Over Time (g)</h6>
+          <canvas id="macroAreaChart" height="220"></canvas>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="chart-card">
+          <h6 class="chart-title"><i class="bi bi-star me-2 text-amber"></i>Health Score Timeline</h6>
+          <canvas id="healthScoreChart" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Row 3: Surplus/Deficit + Nutrient Radar -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-7">
+        <div class="chart-card">
+          <h6 class="chart-title">
+            <i class="bi bi-bar-chart me-2 text-rose"></i>
+            Daily Calorie Surplus / Deficit
+            <span style="color:var(--text-3);font-size:0.75rem;font-weight:400;margin-left:8px;">vs your TDEE goal</span>
+          </h6>
+          <canvas id="surplusChart" height="220"></canvas>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="chart-card">
+          <h6 class="chart-title"><i class="bi bi-diagram-3 me-2 text-cyan"></i>Average Nutrient Coverage vs RDI</h6>
+          <canvas id="nutrientRadarChart" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Row 4: Protein trend -->
+    <div class="row g-4 mb-4">
+      <div class="col-12">
+        <div class="chart-card">
+          <h6 class="chart-title"><i class="bi bi-activity me-2 text-green"></i>Daily Protein, Carbs &amp; Fat Trends</h6>
+          <canvas id="macroLineChart" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day Log Table -->
+    <div class="glass-card mt-2">
+      <h5 style="font-weight:700;margin-bottom:16px;"><i class="bi bi-table me-2 text-accent"></i>Diet Log History</h5>
+      <div class="table-responsive">
+        <table class="table food-log-table mb-0">
+          <thead>
+            <tr>
+              <th>Date</th><th>Calories</th><th>Protein</th><th>Fat</th>
+              <th>Carbs</th><th>Fiber</th><th>Sugar</th><th>Health Score</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer" style="margin-top:60px;">
+  <div class="container text-center">
+    <p>Diet Impact Analyser &nbsp;|&nbsp; Personalised Nutrition Tracking</p>
+    <p class="footer-sub">Built with Flask · SQLite · Pandas · NumPy · Chart.js</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  // Read TDEE from data attribute — avoids Jinja inside JS (linter-friendly)
+  const _tdeeRaw = document.body.dataset.tdee;
+  window.USER_TDEE = _tdeeRaw ? parseFloat(_tdeeRaw) : null;
+</script>
+<script src="/static/js/dashboard.js"></script>
+</body>
+</html>

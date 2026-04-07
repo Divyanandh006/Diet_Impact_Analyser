@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About – Diet Impact Analyser</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+<nav class="navbar navbar-expand-lg">
+  <div class="container">
+    <a class="navbar-brand" href="/"><span class="brand-icon">🥗</span>Diet<span class="brand-accent">Impact</span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house me-1"></i>Home</a></li>
+        {% if user %}
+        <li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-graph-up me-1"></i>Dashboard</a></li>
+        {% endif %}
+        <li class="nav-item"><a class="nav-link active" href="/about">About</a></li>
+        {% if user %}
+        <li class="nav-item">
+          <div class="nav-user-badge">
+            <div class="avatar-xs">{{ user.username[0].upper() }}</div>
+            <span>{{ user.username }}</span>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a href="/logout" class="btn-nav-logout"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
+        </li>
+        {% else %}
+        <li class="nav-item"><a class="nav-link" href="/login">Sign In</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="container text-center">
+    <div class="hero-badge">College Project – 2nd Year Engineering</div>
+    <h1 class="hero-title">About <span class="text-accent">Diet Impact Analyser</span></h1>
+    <p class="hero-subtitle">A full-stack data science project built to analyse dietary habits using Python, Flask, and Chart.js</p>
+  </div>
+</section>
+
+<section class="form-section">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- Project Overview -->
+      <div class="col-lg-8">
+        <div class="glass-card">
+          <h4><i class="bi bi-info-circle me-2 text-accent"></i>Project Overview</h4>
+          <p>The <strong>Diet Impact Analyser</strong> is a full-stack web application that helps users understand the nutritional impact of their daily food intake. Users log their meals, and the system retrieves nutritional data, performs calculations using data science techniques, and visualises the results through interactive charts.</p>
+
+          <h5 class="mt-4">🎯 Objectives</h5>
+          <ul style="color:var(--text-2);line-height:2;">
+            <li>Secure <strong>multi-user authentication</strong> with per-user diet databases</li>
+            <li>Log daily food consumption with date tagging and quantity entry</li>
+            <li>Calculate total caloric and nutrient intake using <strong>Pandas and NumPy</strong></li>
+            <li>Compare results against <strong>Recommended Daily Intake (RDI)</strong> values</li>
+            <li>Visualise nutrition and <strong>historical trends</strong> using Chart.js (6+ chart types)</li>
+            <li>Generate personalised dietary suggestions based on profile BMI/TDEE</li>
+          </ul>
+
+          <h5 class="mt-4">🏗️ Architecture</h5>
+          <p>The system follows a clean 3-tier architecture:</p>
+          <ul>
+            <li><strong>Presentation Layer:</strong> HTML, CSS (Bootstrap 5), JavaScript</li>
+            <li><strong>Application Layer:</strong> Python Flask backend with REST API</li>
+            <li><strong>Data Layer:</strong> CSV dataset (90 food items) + Pandas/NumPy analysis</li>
+          </ul>
+
+          <h5 class="mt-4">📊 Data Analysis Logic</h5>
+          <ol>
+            <li>Nutrition data is loaded from a <code>CSV dataset</code> using Pandas</li>
+            <li>User entries (food_id + quantity) are matched against the dataset</li>
+            <li>Nutrients are scaled: <code>value × (quantity / 100)</code></li>
+            <li>NumPy aggregates totals across all food items</li>
+            <li>Comparison calculates <code>% of RDI</code> for each nutrient</li>
+            <li>Rule-based engine generates improvement suggestions</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Tech Stack -->
+      <div class="col-lg-4">
+        <div class="glass-card">
+          <h4 style="font-weight:700;margin-bottom:16px;"><i class="bi bi-stack me-2 text-accent"></i>Tech Stack</h4>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;"><span class="cat-chip cat-Protein" style="width:80px;text-align:center;">Backend</span><span style="color:var(--text-2);font-size:0.88rem;">Python Flask + Flask-Login + Bcrypt</span></div>
+            <div style="display:flex;align-items:center;gap:10px;"><span class="cat-chip cat-Grains" style="width:80px;text-align:center;">Analysis</span><span style="color:var(--text-2);font-size:0.88rem;">Pandas, NumPy</span></div>
+            <div style="display:flex;align-items:center;gap:10px;"><span class="cat-chip cat-Vegetables" style="width:80px;text-align:center;">Database</span><span style="color:var(--text-2);font-size:0.88rem;">SQLite + SQLAlchemy ORM</span></div>
+            <div style="display:flex;align-items:center;gap:10px;"><span class="cat-chip cat-Dairy" style="width:80px;text-align:center;">Frontend</span><span style="color:var(--text-2);font-size:0.88rem;">HTML, CSS, JS, Bootstrap 5</span></div>
+            <div style="display:flex;align-items:center;gap:10px;"><span class="cat-chip cat-Drinks" style="width:80px;text-align:center;">Charts</span><span style="color:var(--text-2);font-size:0.88rem;">Chart.js v4 (6+ chart types)</span></div>
+            <div style="display:flex;align-items:center;gap:10px;"><span class="cat-chip cat-Legumes" style="width:80px;text-align:center;">Dataset</span><span style="color:var(--text-2);font-size:0.88rem;">CSV — 90 food items</span></div>
+            <div style="display:flex;align-items:center;gap:10px;"><span class="cat-chip" style="width:80px;text-align:center;background:rgba(100,116,139,0.12);color:#64748b;">Deploy</span><span style="color:var(--text-2);font-size:0.88rem;">Render + Gunicorn + GitHub</span></div>
+          </div>
+        </div>
+
+        <div class="glass-card mt-4">
+          <h4 style="font-weight:700;margin-bottom:16px;"><i class="bi bi-file-earmark-code me-2 text-accent"></i>API Endpoints</h4>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div><code style="color:var(--cyan);font-size:0.78rem;">POST /api/diet_logs</code><br/><small style="color:var(--text-3);">Save/merge food log for a date</small></div>
+            <div><code style="color:var(--cyan);font-size:0.78rem;">GET /api/history</code><br/><small style="color:var(--text-3);">Fetch all logs for current user</small></div>
+            <div><code style="color:var(--cyan);font-size:0.78rem;">POST /api/analyse</code><br/><small style="color:var(--text-3);">Analyse submitted food entries</small></div>
+            <div><code style="color:var(--cyan);font-size:0.78rem;">POST /api/profile</code><br/><small style="color:var(--text-3);">Update height/weight/age/gender</small></div>
+            <div><code style="color:var(--cyan);font-size:0.78rem;">GET /api/foods/search?q=</code><br/><small style="color:var(--text-3);">Autocomplete food search</small></div>
+            <div><code style="color:var(--cyan);font-size:0.78rem;">GET /api/rdi</code><br/><small style="color:var(--text-3);">Return RDI reference values</small></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dataset info -->
+      <div class="col-12">
+        <div class="glass-card">
+          <h4 style="font-weight:700;margin-bottom:12px;"><i class="bi bi-database me-2 text-accent"></i>Dataset Structure</h4>
+          <p>The CSV dataset contains <strong>90 food items</strong> across 7 categories: Grains, Protein, Dairy, Fruits, Vegetables, Fats & Oils, Sweets & Beverages.</p>
+          <div class="table-responsive">
+            <table class="table food-log-table" style="font-size:0.85rem;">
+              <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td>food_id</td><td>int</td><td>Unique identifier</td></tr>
+                <tr><td>food_name</td><td>str</td><td>Name of the food item</td></tr>
+                <tr><td>category</td><td>str</td><td>Food category group</td></tr>
+                <tr><td>serving_size_g</td><td>float</td><td>Standard serving size in grams</td></tr>
+                <tr><td>calories</td><td>float</td><td>Energy in kcal per 100g</td></tr>
+                <tr><td>protein_g</td><td>float</td><td>Protein in grams per 100g</td></tr>
+                <tr><td>fat_g</td><td>float</td><td>Total fat in grams per 100g</td></tr>
+                <tr><td>carbs_g</td><td>float</td><td>Carbohydrates in grams per 100g</td></tr>
+                <tr><td>fiber_g</td><td>float</td><td>Dietary fiber in grams per 100g</td></tr>
+                <tr><td>sugar_g</td><td>float</td><td>Sugar in grams per 100g</td></tr>
+                <tr><td>sodium_mg</td><td>float</td><td>Sodium in mg per 100g</td></tr>
+                <tr><td>vitamin_c_mg</td><td>float</td><td>Vitamin C in mg per 100g</td></tr>
+                <tr><td>calcium_mg</td><td>float</td><td>Calcium in mg per 100g</td></tr>
+                <tr><td>iron_mg</td><td>float</td><td>Iron in mg per 100g</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container text-center">
+    <p>Diet Impact Analyser &nbsp;|&nbsp; A Full Stack + Data Science College Project</p>
+    <p class="footer-sub">Built with Flask · Pandas · NumPy · Chart.js · Bootstrap 5</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
