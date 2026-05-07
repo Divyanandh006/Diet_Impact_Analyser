@@ -38,25 +38,35 @@ app = Flask(__name__)
 # Random key each restart → invalidates old sessions → everyone logs in fresh
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
-# SQLite with thread-safety + connection health checks for multi-user.
-# Use /tmp on Vercel serverless; otherwise use local file in the repo root.
-sqlite_file = os.environ.get('SQLITE_FILE')
-if not sqlite_file:
-    if os.environ.get('VERCEL'):
-        sqlite_file = '/tmp/diet_impact.db'
-    else:
-        sqlite_file = os.path.join(os.getcwd(), 'diet_impact.db')
+# Database configuration
+db_url = os.environ.get('DATABASE_URL')
+if db_url and db_url.startswith('postgres://'):
+    # Render/Heroku provide 'postgres://', but SQLAlchemy 1.4+ requires 'postgresql://'
+    db_url = db_url.replace('postgres://', 'postgresql://', 1)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-    'DATABASE_URL',
-    f'sqlite:///{sqlite_file}'
-)
+if not db_url:
+    sqlite_file = os.environ.get('SQLITE_FILE')
+    if not sqlite_file:
+        if os.environ.get('VERCEL'):
+            sqlite_file = '/tmp/diet_impact.db'
+        else:
+            sqlite_file = os.path.join(os.getcwd(), 'diet_impact.db')
+    db_url = f'sqlite:///{sqlite_file}'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSON_SORT_KEYS'] = False
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'connect_args': {'check_same_thread': False},  # allow multi-threaded access
-    'pool_pre_ping': True,                          # verify connection before use
-}
+
+# Engine options: check_same_thread is SQLite-only
+if db_url.startswith('sqlite'):
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'connect_args': {'check_same_thread': False},
+        'pool_pre_ping': True,
+    }
+else:
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_pre_ping': True,
+    }
 
 # Sessions expire when browser closes — each user starts at login
 app.config['SESSION_COOKIE_PERMANENT'] = False
