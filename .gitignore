@@ -10,3 +10,8 @@ instance/
 .DS_Store
 *.egg-info/
 dist/
+
+.vercel
+.env*.local
+*.db-shm
+*.db-wal
