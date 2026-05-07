@@ -1,11 +1,3 @@
-"""
-app.py  –  Diet Impact Analyser  |  Flask Backend (v2.0)
-==========================================================
-Multi-user version with authentication, per-user diet logs,
-historical analysis, and profile management.
-Run with:   python app.py
-"""
-
 import os
 import json
 import secrets
@@ -38,6 +30,8 @@ app = Flask(__name__)
 # Random key each restart → invalidates old sessions → everyone logs in fresh
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
+# SQLite with thread-safety + connection health checks for multi-user.
+# Use /tmp on Vercel serverless; otherwise use local file in the repo root.
 # Database configuration
 db_url = os.environ.get('DATABASE_URL')
 if db_url and db_url.startswith('postgres://'):
