@@ -70,6 +70,44 @@
       <button class="filter-pill active" data-days="30" onclick="setFilter(30)">Last 30 Days</button>
       <button class="filter-pill" data-days="90" onclick="setFilter(90)">Last 90 Days</button>
       <button class="filter-pill" data-days="0"  onclick="setFilter(0)">All Time</button>
+      <div class="ms-auto d-flex gap-2">
+        <a href="/api/ds/export" class="btn btn-sm btn-outline-light" style="border-radius:20px; font-size:0.75rem; border-color:rgba(255,255,255,0.1);">
+          <i class="bi bi-download me-1"></i>Export CSV
+        </a>
+      </div>
+    </div>
+
+    <!-- Data Science Insights Row -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-4">
+        <div class="insight-card glass-card h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="m-0"><i class="bi bi-robot me-2 text-accent"></i>Diet Classification</h6>
+            <span class="badge-ds" id="dsDietType">Analyzing...</span>
+          </div>
+          <p class="text-3 small mb-0" id="dsDietDesc">Based on your recent macronutrient distribution patterns.</p>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="insight-card glass-card h-100">
+          <h6 class="mb-3"><i class="bi bi-magic me-2 text-violet"></i>Predictive Weight Trend</h6>
+          <div id="dsWeightPrediction">
+            <p class="text-3 small mb-2">Analyzing caloric balance history...</p>
+            <div class="progress" style="height: 6px; background: rgba(255,255,255,0.05);">
+              <div class="progress-bar bg-violet" role="progressbar" style="width: 0%" id="dsPredictionProgress"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="insight-card glass-card h-100">
+          <h6 class="mb-3"><i class="bi bi-lightbulb me-2 text-amber"></i>Statistical Correlation</h6>
+          <p class="text-3 small mb-0" id="dsCorrelation">
+            Sugar vs Health Score: <span class="text-white fw-bold" id="dsSugarCorr">--</span><br>
+            Consistency Score: <span class="text-white fw-bold" id="dsConsistency">--</span>
+          </p>
+        </div>
+      </div>
     </div>
 
     <!-- Stat Cards -->

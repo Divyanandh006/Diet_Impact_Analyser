@@ -6,3 +6,4 @@ pandas
 numpy
 gunicorn==22.0.0
 psycopg2-binary
+scikit-learn

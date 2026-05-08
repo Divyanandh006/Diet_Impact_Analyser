@@ -45,6 +45,7 @@ let activeDays = 30;
 
     document.getElementById('dashboardContent').style.display = 'block';
     setFilter(30);   // default: last 30 days
+    fetchDSInsights(); // New: Fetch data science insights
   } catch (e) {
     console.error('Dashboard load error:', e);
   }
@@ -424,6 +425,63 @@ function renderHistoryTable(logs) {
         <td><span class="np-status ${sClass}">${s.toFixed(0)}/100</span></td>
       </tr>`;
   }).join('');
+}
+
+// ── 9. Data Science Insights ──────────────────────────────────────
+async function fetchDSInsights() {
+  try {
+    const res = await fetch('/api/ds/insights');
+    const data = await res.json();
+    
+    // Diet Type
+    const dtEl = document.getElementById('dsDietType');
+    if (dtEl) {
+      dtEl.textContent = data.diet_type;
+      dtEl.className = 'badge-ds'; // Reset
+    }
+
+    // Correlation
+    const sugarEl = document.getElementById('dsSugarCorr');
+    if (sugarEl) {
+      const corr = data.insights.sugar_health_correlation;
+      if (corr !== undefined) {
+        sugarEl.textContent = corr;
+        sugarEl.style.color = corr < -0.4 ? COLORS.red : corr < 0 ? COLORS.amber : COLORS.green;
+      } else {
+        sugarEl.textContent = 'Need more data';
+      }
+    }
+    
+    const consistEl = document.getElementById('dsConsistency');
+    if (consistEl) {
+      const score = data.insights.consistency_score;
+      consistEl.textContent = score !== undefined ? score + '%' : 'Need more data';
+    }
+
+    // Predictions
+    const predEl = document.getElementById('dsWeightPrediction');
+    if (predEl && data.predictions && data.predictions.length) {
+      const latest = data.predictions[data.predictions.length - 1];
+      const start = data.predictions[0].weight;
+      const diff = (latest.weight - start).toFixed(2);
+      const sign = diff > 0 ? '+' : '';
+      
+      predEl.innerHTML = `
+        <div class="d-flex justify-content-between align-items-end mb-2">
+          <div class="text-3 small">Predicted for 7 days:</div>
+          <div class="fw-bold text-violet" style="font-size:1.1rem">${sign}${diff} kg</div>
+        </div>
+        <div class="small text-2" style="font-size:0.75rem">
+          Trend based on your energy balance (${Math.round(avg(allLogs.map(l => l.total_calories)))} kcal avg vs ${USER_TDEE} TDEE).
+        </div>
+      `;
+    } else if (predEl) {
+      predEl.innerHTML = '<p class="text-3 small">Insufficient data for prediction. Keep logging!</p>';
+    }
+
+  } catch (e) {
+    console.error('DS Insights fetch error:', e);
+  }
 }
 
 // ── Utilities ─────────────────────────────────────────────────────

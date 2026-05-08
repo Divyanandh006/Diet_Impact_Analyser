@@ -12,7 +12,11 @@ Diet Impact Analyser is a full-stack web application that:
 - Retrieves nutritional data from a CSV dataset using **Pandas**
 - Calculates total nutrients using **NumPy**
 - Compares intake against **Recommended Daily Intake (RDI)** values
-- Visualises results using **Chart.js** (pie, bar, radar, horizontal bar charts)
+- Visualises results using **Chart.js** (Line, Bar, Radar, Doughnut, Area charts)
+- **Predictive Analytics**: Future weight trend prediction using Linear Regression
+- **Diet Classification**: Pattern recognition for Keto, High Protein, Balanced diets
+- **Statistical Insights**: Correlation analysis (e.g., Sugar vs Health Score)
+- **Data Export**: Export your entire history as CSV for further analysis
 - Generates rule-based diet improvement suggestions
 
 ---
@@ -33,10 +37,10 @@ Flask Web Server (app.py)
      │       ├── POST /api/analyse            → Run analysis
      │       └── GET  /api/rdi               → RDI reference
      │
-     └── Analysis Module (analysis/diet_analyser.py)
+     └── Analysis Module (analysis/diet_analyser.py & ds_engine.py)
              │
-             └── Dataset (data/nutrition_data.csv)
-                     └── 90 food items, 14 nutrient columns
+             ├── Dataset (data/nutrition_data.csv)
+             └── ML Engine (Linear Regression for predictions)
 ```
 
 ---
@@ -80,6 +84,7 @@ diet-impact-analyser/
 |---------------|-------------------------|
 | Backend       | Python 3.11, Flask 3    |
 | Data Analysis | Pandas 2.2, NumPy 1.26  |
+| Machine Learning | Scikit-learn (Linear Regression) |
 | Frontend      | HTML5, CSS3, JavaScript |
 | UI Framework  | Bootstrap 5.3           |
 | Charts        | Chart.js 4.4            |

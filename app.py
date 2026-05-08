@@ -23,19 +23,19 @@ from analysis.diet_analyser import (
     generate_suggestions, diet_summary_stats, get_macro_distribution,
     RECOMMENDED_DAILY_INTAKE, NUTRIENT_LABELS,
 )
+from analysis.ds_engine import (
+    classify_diet_type, predict_weight_trend, 
+    get_statistical_insights, detect_anomalies
+)
+import io
+import csv
+from flask import Response
 
-# ── App & Extensions ───────────────────────────────────────────────
 app = Flask(__name__)
-
-# Random key each restart → invalidates old sessions → everyone logs in fresh
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
-# SQLite with thread-safety + connection health checks for multi-user.
-# Use /tmp on Vercel serverless; otherwise use local file in the repo root.
-# Database configuration
 db_url = os.environ.get('DATABASE_URL')
 if db_url and db_url.startswith('postgres://'):
-    # Render/Heroku provide 'postgres://', but SQLAlchemy 1.4+ requires 'postgresql://'
     db_url = db_url.replace('postgres://', 'postgresql://', 1)
 
 if not db_url:
@@ -51,7 +51,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSON_SORT_KEYS'] = False
 
-# Engine options: check_same_thread is SQLite-only
 if db_url.startswith('sqlite'):
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         'connect_args': {'check_same_thread': False},
@@ -62,7 +61,6 @@ else:
         'pool_pre_ping': True,
     }
 
-# Sessions expire when browser closes — each user starts at login
 app.config['SESSION_COOKIE_PERMANENT'] = False
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
@@ -70,7 +68,7 @@ db          = SQLAlchemy(app)
 bcrypt      = Bcrypt(app)
 login_mgr   = LoginManager(app)
 login_mgr.login_view             = 'login'
-login_mgr.login_message          = ''   # suppress default flash; login is the natural entry
+login_mgr.login_message          = ''   
 login_mgr.login_message_category = 'info'
 
 
@@ -85,9 +83,6 @@ def set_sqlite_pragmas(dbapi_connection, connection_record):
         cur.execute('PRAGMA foreign_keys=ON')      # enforce FK constraints
         cur.execute('PRAGMA cache_size=2000')      # 2 MB page cache per connection
         cur.close()
-
-
-# ── Models ─────────────────────────────────────────────────────────
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
@@ -197,7 +192,6 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
-# ── Page Routes ────────────────────────────────────────────────────
 
 @app.route('/')
 def index():
@@ -304,8 +298,6 @@ def about():
     u = current_user.to_profile_dict() if current_user.is_authenticated else None
     return render_template('about.html', user=u)
 
-
-# ── API: Foods ─────────────────────────────────────────────────────
 
 @app.route('/api/foods/search')
 @login_required
@@ -498,6 +490,76 @@ def api_update_profile():
         db.session.rollback()
         return jsonify({'error': 'Failed to update profile. Please try again.'}), 500
     return jsonify({'status': 'updated', 'profile': current_user.to_profile_dict()})
+
+
+# ── API: Data Science & Insights ───────────────────────────────────
+
+@app.route('/api/ds/insights')
+@login_required
+def api_ds_insights():
+    """Return advanced data science insights."""
+    logs = (DietLog.query
+            .filter_by(user_id=current_user.id)
+            .order_by(DietLog.date.asc())
+            .all())
+    
+    history_data = [log.to_dict() for log in logs]
+    profile = current_user.to_profile_dict()
+    
+    # Get macro distribution for classification (from most recent log)
+    diet_type = "Insufficient data"
+    if history_data:
+        latest_totals = history_data[-1]
+        macros = get_macro_distribution(latest_totals)
+        diet_type = classify_diet_type(macros)
+
+    insights = get_statistical_insights(history_data)
+    predictions = predict_weight_trend(history_data, profile.get('weight_kg'), profile.get('tdee'))
+    anomalies = detect_anomalies(history_data)
+
+    return jsonify({
+        'diet_type':   diet_type,
+        'insights':    insights,
+        'predictions': predictions,
+        'anomalies':   anomalies,
+        'history_count': len(history_data)
+    })
+
+
+@app.route('/api/ds/export')
+@login_required
+def api_ds_export():
+    """Export user diet history as CSV."""
+    logs = (DietLog.query
+            .filter_by(user_id=current_user.id)
+            .order_by(DietLog.date.asc())
+            .all())
+    
+    if not logs:
+        return jsonify({'error': 'No data to export'}), 400
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Header
+    writer.writerow([
+        'Date', 'Calories', 'Protein (g)', 'Fat (g)', 'Carbs (g)', 
+        'Fiber (g)', 'Sugar (g)', 'Sodium (mg)', 'Health Score'
+    ])
+    
+    for log in logs:
+        writer.writerow([
+            log.date, log.total_calories, log.total_protein_g, 
+            log.total_fat_g, log.total_carbs_g, log.total_fiber_g, 
+            log.total_sugar_g, log.total_sodium_mg, log.health_score
+        ])
+    
+    output.seek(0)
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-disposition": f"attachment; filename=diet_history_{current_user.username}.csv"}
+    )
 
 
 # ── DB Init & Run ──────────────────────────────────────────────────
